@@ -145,7 +145,7 @@ class SimplePackageConfig implements PackageConfig {
     // Check if it is inside the package URI root.
     var path = nonPackageUri.toString();
     var root = package.packageUriRoot.toString();
-    if (_beginsWith(package.root.toString().length, root, path)) {
+    if (path.startsWith(root, package.root.toString().length)) {
       var rest = path.substring(root.length);
       return Uri(scheme: "package", path: "${package.name}/$rest");
     }
@@ -406,7 +406,7 @@ class MutablePackageTree implements PackageTree {
       var treePackagePath = treePackage.root.toString();
       assert(treePackagePath.length > start);
       assert(path.startsWith(treePackagePath.substring(0, start)));
-      if (_beginsWith(start, treePackagePath, path)) {
+      if (path.startsWith(treePackagePath, start)) {
         // Package *is* inside treePackage.
         var treePackagePathLength = treePackagePath.length;
         if (path.length == treePackagePathLength) {
@@ -415,7 +415,7 @@ class MutablePackageTree implements PackageTree {
           return;
         }
         var treePackageUriRoot = treePackage.packageUriRoot.toString();
-        if (_beginsWith(treePackagePathLength, path, treePackageUriRoot)) {
+        if (treePackageUriRoot.startsWith(path, treePackagePathLength) {
           // The treePackage's package root is inside package, which is inside
           // the treePackage. This is not allowed.
           onError(ConflictException.packageRoot(package, treePackage));
@@ -441,14 +441,14 @@ class MutablePackageTree implements PackageTree {
   SimplePackage? findPackageOf(int start, String path) {
     for (var childPackage in packages) {
       var childPath = childPackage.root.toString();
-      if (_beginsWith(start, childPath, path)) {
+      if (path.startsWith(childPath, start)) {
         // The [package] is inside [childPackage].
         var childPathLength = childPath.length;
         if (path.length == childPathLength) return childPackage;
         var uriRoot = childPackage.packageUriRoot.toString();
         // Is [package] is inside the URI root of [childPackage].
         if (uriRoot.length == childPathLength ||
-            _beginsWith(childPathLength, uriRoot, path)) {
+            path.startsWith(uriRoot, childPathLength)) {
           return childPackage;
         }
         return _packageChildren?[childPackage.name]
@@ -474,18 +474,6 @@ class EmptyPackageTree implements PackageTree {
   Iterable<Package> get allPackages => const Iterable<Package>.empty();
 
   SimplePackage? packageOf(Uri file) => null;
-}
-
-/// Checks whether [longerPath] begins with [parentPath].
-///
-/// Skips checking the [start] first characters which are assumed to
-/// already have been matched.
-bool _beginsWith(int start, String parentPath, String longerPath) {
-  if (longerPath.length < parentPath.length) return false;
-  for (var i = start; i < parentPath.length; i++) {
-    if (longerPath.codeUnitAt(i) != parentPath.codeUnitAt(i)) return false;
-  }
-  return true;
 }
 
 /// Conflict between packages added to the same configuration.
